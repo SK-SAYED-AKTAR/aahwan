@@ -5,25 +5,45 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const emeraldLight = '#0F5C48';
+const emeraldDark = '#4FA184';
 
+/**
+ * Sophisticated neutral palette: warm off-white/charcoal-green surfaces with
+ * emerald as a sparing accent and muted gold for secondary emphasis
+ * (current-prayer highlight, azaan screen). Never use `primary` as a
+ * background fill — see AGENTS.md section 13.
+ */
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: '#1C1B19',
+    textSecondary: '#726C63',
+    background: '#FAF6F0',
+    surface: '#FFFFFF',
+    surfaceMuted: '#F1ECE2',
+    border: '#E7E0D3',
+    primary: emeraldLight,
+    primarySoft: '#E3EEE8',
+    accent: '#B4894F',
+    tint: emeraldLight,
+    icon: '#847E74',
+    tabIconDefault: '#A39C90',
+    tabIconSelected: emeraldLight,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: '#F3EFE7',
+    textSecondary: '#9C9690',
+    background: '#0D1210',
+    surface: '#141B17',
+    surfaceMuted: '#1A221D',
+    border: '#232B26',
+    primary: emeraldDark,
+    primarySoft: '#1A2A22',
+    accent: '#D4B677',
+    tint: emeraldDark,
+    icon: '#8D9490',
+    tabIconDefault: '#6C7570',
+    tabIconSelected: emeraldDark,
   },
 };
 

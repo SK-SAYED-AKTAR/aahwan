@@ -15,9 +15,22 @@ type IconSymbolName = keyof typeof MAPPING;
  */
 const MAPPING = {
   'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
+  'building.columns.fill': 'mosque',
+  'gearshape.fill': 'settings',
   'chevron.right': 'chevron-right',
+  'chevron.left': 'arrow-back',
+  xmark: 'close',
+  checkmark: 'check',
+  'checkmark.circle.fill': 'check-circle',
+  circle: 'radio-button-unchecked',
+  'moon.fill': 'nights-stay',
+  'sun.max.fill': 'wb-sunny',
+  'speaker.wave.2.fill': 'volume-up',
+  'play.fill': 'play-arrow',
+  'bell.fill': 'notifications',
+  'bell.slash.fill': 'notifications-off',
+  'slider.horizontal.3': 'tune',
+  'info.circle.fill': 'info',
 } as IconMapping;
 
 /**
