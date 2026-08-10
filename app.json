@@ -19,7 +19,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.sayed.aahwan"
     },
     "web": {
       "output": "static",
@@ -43,13 +48,21 @@
       [
         "expo-notifications",
         {
-          "sounds": ["./assets/audio/azaan-placeholder.wav"]
+          "sounds": [
+            "./assets/audio/azaan_placeholder.wav"
+          ]
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a6acd1d5-d192-416a-946b-1e472bff5c7f"
+      }
     }
   }
 }

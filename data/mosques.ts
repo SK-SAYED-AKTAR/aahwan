@@ -10,7 +10,7 @@ export const MOSQUES: Mosque[] = [
     id: 'sajano-pally-jame-masjid',
     name: 'Sajano Pally Jame Masjid',
     prayers: [
-      { name: 'Fajr', time: '01:42' },
+      { name: 'Fajr', time: '01:58' },
       { name: 'Dhuhr', time: '13:05' },
       { name: 'Asr', time: '16:35' },
       { name: 'Maghrib', time: '18:28' },

@@ -1,5 +1,6 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 
 /**
  * Isolates all azaan playback + alert scheduling behind a small function API
@@ -15,7 +16,16 @@ import * as Notifications from 'expo-notifications';
  * hooks/use-foreground-azaan-watcher.ts). Upgrade path: a config-plugin-based native
  * alarm (e.g. full-screen intent notifications on Android, critical alerts on iOS)
  * behind a dev client build.
+ *
+ * The custom azaan sound on the notification itself (as opposed to the in-app
+ * full-screen player) only works in a dev client / production build — the
+ * "sounds" config plugin below bundles the file into the native project at
+ * prebuild time, which Expo Go can't do. In Expo Go the OS plays its default
+ * notification sound instead; that's a platform limitation, not a bug here.
  */
+
+const AZAAN_SOUND_NAME = 'azaan_placeholder'; // matches assets/audio/azaan_placeholder.wav (no hyphens: Android resource names require [a-z0-9_])
+const AZAAN_CHANNEL_ID = 'azaan-alerts';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -26,16 +36,32 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const AZAAN_SOUND = require('@/assets/audio/azaan-placeholder.wav');
+const AZAAN_SOUND = require('@/assets/audio/azaan_placeholder.wav');
 
 let player: AudioPlayer | null = null;
+let androidChannelReady: Promise<unknown> | null = null;
 
 function getPlayer(): AudioPlayer {
   if (!player) player = createAudioPlayer(AZAAN_SOUND);
   return player;
 }
 
+/** Android 8+ ignores per-notification sound; the sound must live on the channel. */
+function ensureAndroidChannel(): Promise<unknown> {
+  if (Platform.OS !== 'android') return Promise.resolve();
+  if (!androidChannelReady) {
+    androidChannelReady = Notifications.setNotificationChannelAsync(AZAAN_CHANNEL_ID, {
+      name: 'Prayer Alerts',
+      importance: Notifications.AndroidImportance.MAX,
+      sound: AZAAN_SOUND_NAME,
+      vibrationPattern: [0, 250, 250, 250],
+    });
+  }
+  return androidChannelReady;
+}
+
 export async function requestAlarmPermissions(): Promise<boolean> {
+  await ensureAndroidChannel();
   const current = await Notifications.getPermissionsAsync();
   if (current.status === 'granted') return true;
   const requested = await Notifications.requestPermissionsAsync();
@@ -46,8 +72,8 @@ export async function schedulePrayerAlert(id: string, date: Date, title: string,
   if (date.getTime() <= Date.now()) return;
   await Notifications.scheduleNotificationAsync({
     identifier: id,
-    content: { title, body, sound: true },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
+    content: { title, body, sound: `${AZAAN_SOUND_NAME}.wav` },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date, channelId: AZAAN_CHANNEL_ID },
   });
 }
 
