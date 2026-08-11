@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AdminLoginForm } from '@/components/admin-login-form';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -21,8 +22,9 @@ const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
 
 export default function SettingsScreen() {
   const theme = Colors[useAppColorScheme()];
-  const { settings, updateSettings, setPrayerAlertEnabled } = usePrayerStore();
+  const { settings, updateSettings, setPrayerAlertEnabled, isAdmin, logout } = usePrayerStore();
   const [isTesting, setIsTesting] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => stopAzaan, []);
 
@@ -47,6 +49,39 @@ export default function SettingsScreen() {
       <SafeAreaView style={styles.flex} edges={['top']}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <ThemedText style={styles.title}>Settings</ThemedText>
+
+          <Section title="Account" theme={theme}>
+            {isAdmin ? (
+              <>
+                <View style={styles.row}>
+                  <View style={styles.testRow}>
+                    <IconSymbol name="checkmark.circle.fill" size={18} color={theme.primary} />
+                    <ThemedText style={styles.rowLabel}>Signed in as Admin</ThemedText>
+                  </View>
+                </View>
+                <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                <Pressable
+                  onPress={() => toggle(logout)}
+                  style={styles.row}
+                  accessibilityRole="button"
+                  accessibilityLabel="Log out">
+                  <ThemedText style={[styles.rowLabel, { color: theme.accent }]}>Log out</ThemedText>
+                </Pressable>
+              </>
+            ) : showLogin ? (
+              <View style={styles.accountForm}>
+                <AdminLoginForm onSuccess={() => setShowLogin(false)} />
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setShowLogin(true)}
+                style={styles.row}
+                accessibilityRole="button"
+                accessibilityLabel="Sign in as admin">
+                <ThemedText style={[styles.rowLabel, { color: theme.primary }]}>Sign in as Admin</ThemedText>
+              </Pressable>
+            )}
+          </Section>
 
           <Section title="Prayer Alerts" theme={theme}>
             <ToggleRow
@@ -224,6 +259,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   rowLabel: { fontSize: 16 },
+  accountForm: { padding: 16 },
   divider: { height: StyleSheet.hairlineWidth },
   testRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   segmented: { flexDirection: 'row', padding: 4, gap: 4 },

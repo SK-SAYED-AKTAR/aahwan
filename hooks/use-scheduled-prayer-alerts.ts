@@ -1,13 +1,12 @@
 import { useEffect } from 'react';
 
 import { usePrayerStore } from '@/context/prayer-store';
-import { MOSQUES } from '@/data/mosques';
 import { cancelAllPrayerAlerts, requestAlarmPermissions, schedulePrayerAlert } from '@/services/prayerAlarm';
 import { formatTimeOfDay, nextOccurrenceOf } from '@/services/prayerTimes';
 
 /** Keeps the device's scheduled local-notification alarms in sync with mosque selection + settings. */
 export function useScheduledPrayerAlerts() {
-  const { selectedMosqueIds, mosqueAlertsEnabled, settings, loading } = usePrayerStore();
+  const { mosques, selectedMosqueIds, mosqueAlertsEnabled, settings, loading } = usePrayerStore();
 
   useEffect(() => {
     if (loading) return;
@@ -18,7 +17,7 @@ export function useScheduledPrayerAlerts() {
         if (!(await requestAlarmPermissions())) return;
 
         const now = new Date();
-        for (const mosque of MOSQUES) {
+        for (const mosque of mosques) {
           if (!selectedMosqueIds.includes(mosque.id)) continue;
           if (mosqueAlertsEnabled[mosque.id] === false) continue;
           for (const prayer of mosque.prayers) {
@@ -37,5 +36,5 @@ export function useScheduledPrayerAlerts() {
         // app-open case, so a scheduling failure here shouldn't break the app.
       }
     })();
-  }, [selectedMosqueIds, mosqueAlertsEnabled, settings, loading]);
+  }, [mosques, selectedMosqueIds, mosqueAlertsEnabled, settings, loading]);
 }

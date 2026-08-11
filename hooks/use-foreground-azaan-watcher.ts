@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
 import { usePrayerStore } from '@/context/prayer-store';
-import { MOSQUES } from '@/data/mosques';
 
 import { useNow } from './use-countdown';
 
@@ -17,14 +16,14 @@ import { useNow } from './use-countdown';
 export function useForegroundAzaanWatcher() {
   const now = useNow(10000);
   const router = useRouter();
-  const { selectedMosqueIds, mosqueAlertsEnabled, settings, loading } = usePrayerStore();
+  const { mosques, selectedMosqueIds, mosqueAlertsEnabled, settings, loading } = usePrayerStore();
   const firedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (loading || !settings.azaanAlertsEnabled) return;
     const dayKey = now.toDateString();
 
-    for (const mosque of MOSQUES) {
+    for (const mosque of mosques) {
       if (!selectedMosqueIds.includes(mosque.id)) continue;
       if (mosqueAlertsEnabled[mosque.id] === false) continue;
       for (const prayer of mosque.prayers) {
@@ -41,5 +40,5 @@ export function useForegroundAzaanWatcher() {
         }
       }
     }
-  }, [now, loading, selectedMosqueIds, mosqueAlertsEnabled, settings, router]);
+  }, [now, loading, mosques, selectedMosqueIds, mosqueAlertsEnabled, settings, router]);
 }

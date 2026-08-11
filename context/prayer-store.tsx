@@ -2,9 +2,18 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 import { MOSQUES } from '@/data/mosques';
 import { readJSON, writeJSON } from '@/services/storage';
-import type { PrayerName } from '@/types/prayer';
+import type { Mosque } from '@/types/mosque';
+import type { PrayerName, TimeOfDay } from '@/types/prayer';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
+
+// ponytail: hardcoded single-admin credentials — there's no backend, so this
+// is a local gate rather than real auth. Upgrade path: real auth once there's
+// a server to check against.
+const ADMIN_EMAIL = 'sayed@aktar.com';
+const ADMIN_PASSWORD = 'Sayed@123';
+
+type MosqueOverrides = Record<string, Partial<Record<PrayerName, TimeOfDay>>>;
 
 export type AppSettings = {
   azaanAlertsEnabled: boolean;
@@ -33,6 +42,11 @@ type PrayerStore = {
   settings: AppSettings;
   updateSettings: (patch: Partial<AppSettings>) => void;
   setPrayerAlertEnabled: (prayer: PrayerName, enabled: boolean) => void;
+  mosques: Mosque[];
+  isAdmin: boolean;
+  login: (email: string, password: string) => boolean;
+  logout: () => void;
+  updatePrayerTime: (mosqueId: string, prayer: PrayerName, time: TimeOfDay) => void;
 };
 
 const PrayerStoreContext = createContext<PrayerStore | null>(null);
@@ -42,6 +56,8 @@ const KEYS = {
   selectedMosques: 'selectedMosqueIds',
   mosqueAlerts: 'mosqueAlertsEnabled',
   settings: 'settings',
+  isAdmin: 'isAdmin',
+  mosqueOverrides: 'mosqueOverrides',
 };
 
 export function PrayerStoreProvider({ children }: { children: ReactNode }) {
@@ -50,22 +66,40 @@ export function PrayerStoreProvider({ children }: { children: ReactNode }) {
   const [selectedMosqueIds, setSelectedMosqueIds] = useState<string[]>([]);
   const [mosqueAlertsEnabled, setMosqueAlertsEnabled] = useState<Record<string, boolean>>({});
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [mosqueOverrides, setMosqueOverrides] = useState<MosqueOverrides>({});
 
   useEffect(() => {
     (async () => {
-      const [onboarded, mosqueIds, alerts, storedSettings] = await Promise.all([
+      const [onboarded, mosqueIds, alerts, storedSettings, admin, overrides] = await Promise.all([
         readJSON(KEYS.onboarded, false),
         readJSON<string[]>(KEYS.selectedMosques, []),
         readJSON<Record<string, boolean>>(KEYS.mosqueAlerts, {}),
         readJSON<AppSettings>(KEYS.settings, DEFAULT_SETTINGS),
+        readJSON(KEYS.isAdmin, false),
+        readJSON<MosqueOverrides>(KEYS.mosqueOverrides, {}),
       ]);
       setHasOnboarded(onboarded);
       setSelectedMosqueIds(mosqueIds);
       setMosqueAlertsEnabled(alerts);
       setSettings(storedSettings);
+      setIsAdmin(admin);
+      setMosqueOverrides(overrides);
       setLoading(false);
     })();
   }, []);
+
+  const mosques = useMemo<Mosque[]>(
+    () =>
+      MOSQUES.map((mosque) => ({
+        ...mosque,
+        prayers: mosque.prayers.map((prayer) => ({
+          ...prayer,
+          time: mosqueOverrides[mosque.id]?.[prayer.name] ?? prayer.time,
+        })),
+      })),
+    [mosqueOverrides]
+  );
 
   const completeOnboarding = () => {
     setHasOnboarded(true);
@@ -115,6 +149,28 @@ export function PrayerStoreProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const login = (email: string, password: string): boolean => {
+    const ok = email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASSWORD;
+    if (ok) {
+      setIsAdmin(true);
+      writeJSON(KEYS.isAdmin, true);
+    }
+    return ok;
+  };
+
+  const logout = () => {
+    setIsAdmin(false);
+    writeJSON(KEYS.isAdmin, false);
+  };
+
+  const updatePrayerTime = (mosqueId: string, prayer: PrayerName, time: TimeOfDay) => {
+    setMosqueOverrides((prev) => {
+      const next = { ...prev, [mosqueId]: { ...prev[mosqueId], [prayer]: time } };
+      writeJSON(KEYS.mosqueOverrides, next);
+      return next;
+    });
+  };
+
   const value = useMemo<PrayerStore>(
     () => ({
       loading,
@@ -129,8 +185,13 @@ export function PrayerStoreProvider({ children }: { children: ReactNode }) {
       settings,
       updateSettings,
       setPrayerAlertEnabled,
+      mosques,
+      isAdmin,
+      login,
+      logout,
+      updatePrayerTime,
     }),
-    [loading, hasOnboarded, selectedMosqueIds, mosqueAlertsEnabled, settings]
+    [loading, hasOnboarded, selectedMosqueIds, mosqueAlertsEnabled, settings, mosques, isAdmin]
   );
 
   return <PrayerStoreContext.Provider value={value}>{children}</PrayerStoreContext.Provider>;
