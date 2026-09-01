@@ -1,23 +1,23 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AdminLoginForm } from '@/components/admin-login-form';
 import { MosqueCard } from '@/components/mosque-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { usePrayerStore } from '@/context/prayer-store';
-import { MOSQUES } from '@/data/mosques';
 import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 
 export default function OnboardingScreen() {
   const theme = Colors[useAppColorScheme()];
   const router = useRouter();
-  const { completeOnboarding, selectedMosqueIds, toggleMosque, selectAllMosques } = usePrayerStore();
-  const [step, setStep] = useState<'welcome' | 'select'>('welcome');
-  const allSelected = selectedMosqueIds.length === MOSQUES.length;
+  const { completeOnboarding, mosques, selectedMosqueIds, toggleMosque, selectAllMosques } = usePrayerStore();
+  const [step, setStep] = useState<'welcome' | 'login' | 'select'>('welcome');
+  const allSelected = selectedMosqueIds.length === mosques.length;
 
   const finish = () => {
     completeOnboarding();
@@ -37,13 +37,13 @@ export default function OnboardingScreen() {
           </View>
           <View style={styles.welcomeFooter}>
             <Pressable
-              onPress={() => setStep('select')}
+              onPress={() => setStep('login')}
               accessibilityRole="button"
               style={({ pressed }) => [
                 styles.primaryButton,
                 { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 },
               ]}>
-              <ThemedText style={styles.primaryButtonText}>Choose Mosque</ThemedText>
+              <ThemedText style={styles.primaryButtonText}>Sign In</ThemedText>
             </Pressable>
             <Pressable onPress={finish} hitSlop={8} style={styles.skip} accessibilityRole="button">
               <ThemedText style={[styles.skipText, { color: theme.textSecondary }]}>Skip for now</ThemedText>
@@ -54,11 +54,33 @@ export default function OnboardingScreen() {
     );
   }
 
+  if (step === 'login') {
+    return (
+      <ThemedView style={styles.flex}>
+        <SafeAreaView style={styles.flex}>
+          <Pressable onPress={() => setStep('welcome')} hitSlop={8} style={styles.back} accessibilityRole="button">
+            <IconSymbol name="chevron.left" size={22} color={theme.text} />
+          </Pressable>
+          <View style={styles.loginContent}>
+            <Image source={require('@/assets/images/icon.png')} style={styles.logo} />
+            <ThemedText style={styles.headline}>Sign In</ThemedText>
+            <ThemedText style={[styles.subhead, { color: theme.textSecondary }]}>
+              Sign in as admin to manage mosque prayer times.
+            </ThemedText>
+            <View style={styles.loginForm}>
+              <AdminLoginForm onSuccess={() => setStep('select')} />
+            </View>
+          </View>
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView style={styles.flex}>
       <SafeAreaView style={styles.flex}>
         <FlatList
-          data={MOSQUES}
+          data={mosques}
           keyExtractor={(mosque) => mosque.id}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
@@ -109,6 +131,10 @@ const styles = StyleSheet.create({
   headline: { fontSize: 28, fontWeight: '600', textAlign: 'center', marginTop: 14 },
   subhead: { fontSize: 16, textAlign: 'center', lineHeight: 23 },
   welcomeFooter: { paddingHorizontal: 32, paddingBottom: 16, gap: 14 },
+  back: { padding: 12, marginLeft: 8, marginTop: 4, minWidth: 44, minHeight: 44, alignItems: 'flex-start', justifyContent: 'center' },
+  loginContent: { flex: 1, alignItems: 'center', paddingHorizontal: 32, paddingTop: 8 },
+  logo: { width: 72, height: 72, borderRadius: 18, marginBottom: 18 },
+  loginForm: { width: '100%', marginTop: 28 },
   primaryButton: { paddingVertical: 16, borderRadius: 100, alignItems: 'center', minHeight: 44 },
   primaryButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   skip: { alignItems: 'center', paddingVertical: 8, minHeight: 44, justifyContent: 'center' },

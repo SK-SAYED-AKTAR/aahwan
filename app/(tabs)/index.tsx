@@ -10,7 +10,6 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { usePrayerStore } from '@/context/prayer-store';
-import { MOSQUES } from '@/data/mosques';
 import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 import { useNextPrayer } from '@/hooks/use-next-prayer';
 import { formatClock, formatDateLong } from '@/services/prayerTimes';
@@ -19,13 +18,13 @@ const CONTENT_PADDING = 24;
 
 export default function HomeScreen() {
   const theme = Colors[useAppColorScheme()];
-  const { selectedMosqueIds, loading, hasOnboarded } = usePrayerStore();
+  const { mosques, selectedMosqueIds, loading, hasOnboarded } = usePrayerStore();
   const { now, nextPrayer } = useNextPrayer();
   const { width } = useWindowDimensions();
 
   const selectedMosques = useMemo(
-    () => MOSQUES.filter((m) => selectedMosqueIds.includes(m.id)),
-    [selectedMosqueIds]
+    () => mosques.filter((m) => selectedMosqueIds.includes(m.id)),
+    [mosques, selectedMosqueIds]
   );
 
   if (loading) return <ThemedView style={styles.flex} />;

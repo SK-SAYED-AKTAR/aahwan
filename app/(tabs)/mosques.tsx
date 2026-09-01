@@ -7,20 +7,19 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { usePrayerStore } from '@/context/prayer-store';
-import { MOSQUES } from '@/data/mosques';
 import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 
 export default function MosquesScreen() {
   const theme = Colors[useAppColorScheme()];
   const router = useRouter();
-  const { selectedMosqueIds, toggleMosque, selectAllMosques } = usePrayerStore();
-  const allSelected = selectedMosqueIds.length === MOSQUES.length;
+  const { mosques, selectedMosqueIds, toggleMosque, selectAllMosques } = usePrayerStore();
+  const allSelected = selectedMosqueIds.length === mosques.length;
 
   return (
     <ThemedView style={styles.flex}>
       <SafeAreaView style={styles.flex} edges={['top']}>
         <FlatList
-          data={MOSQUES}
+          data={mosques}
           keyExtractor={(mosque) => mosque.id}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
